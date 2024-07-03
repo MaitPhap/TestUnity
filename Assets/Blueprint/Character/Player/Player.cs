@@ -8,12 +8,14 @@ public class Player : MonoBehaviour
 {
     private Rigidbody rb;
     BoxCollider bCollider;
-    public Transform gunTransform;
     [Header("Movement")]
     public float moveSpeed;
     public float rotationSpeed;
     public float translate;
     public float rotation;
+    [Header("TankGun")]
+    public Transform gunTransform;
+    [SerializeField] float gunRotationSpeed;
     [Space]
     public LayerMask layerMask;
 
@@ -27,8 +29,14 @@ public class Player : MonoBehaviour
     void Update()
     {
         UpdateAim();
+        UpdateInput();
+
+    }
+
+    private void UpdateInput()
+    {
         translate = Input.GetAxis("Vertical") * moveSpeed;
-        if(translate < 0)
+        if (translate < 0)
         {
             rotation = -Input.GetAxis("Horizontal") * rotationSpeed;
         }
@@ -36,12 +44,15 @@ public class Player : MonoBehaviour
         {
             rotation = Input.GetAxis("Horizontal") * rotationSpeed;
         }
-        
     }
 
     private void FixedUpdate()
     {
-        
+        ApplyMovement();
+    }
+
+    private void ApplyMovement()
+    {
         rb.velocity = transform.forward * translate;
         transform.Rotate(0, rotation, 0);
     }
@@ -52,7 +63,12 @@ public class Player : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
         {
-            gunTransform.Rotate(0, hit.point.normalized.x, 0);
+
+            Vector3 direction = hit.point - gunTransform.position;
+            direction.y = 0;
+            Quaternion targetRotaion = Quaternion.LookRotation(direction);
+            gunTransform.rotation = Quaternion.RotateTowards(gunTransform.rotation, targetRotaion, gunRotationSpeed);
+
         }
     }
 }
